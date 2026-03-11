@@ -1,0 +1,11 @@
+--index-url https://download.pytorch.org/whl/cu124
+--extra-index-url https://pypi.org/simple
+torch==2.6.0
+accelerate>=0.34.0
+peft>=0.14.0
+transformers @ git+https://github.com/huggingface/transformers.git
+safetensors>=0.4.5
+tiktoken>=0.7.0
+tensorboard>=2.16.0
+tqdm>=4.66.0
+rdkit
