@@ -21,10 +21,24 @@ Given a textual description of a molecule, the fine-tuned model generates the co
 ## Setup
 
 ```bash
+conda create -n qwen35-oft python=3.10 -y
+conda activate qwen35-oft
+python -m pip install -U pip setuptools wheel
+
+# Install GPU PyTorch wheel for CUDA 12.1
+pip install --index-url https://download.pytorch.org/whl/cu121 torch==2.6.0
+
+# Install project dependencies
 pip install -r requirements.txt
 ```
 
 `requirements.txt` uses `transformers` from GitHub `main` branch to ensure compatibility with Qwen3.5.
+
+Verify GPU runtime on a compute node:
+
+```bash
+python -c "import torch; print(torch.__version__, torch.version.cuda, torch.cuda.is_available())"
+```
 
 ## Usage
 
