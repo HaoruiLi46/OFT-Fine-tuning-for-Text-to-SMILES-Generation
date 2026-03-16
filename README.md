@@ -1,58 +1,53 @@
-# AIST5030 Mini-Project: Text-to-SMILES Generation with OFT
+# AIST5030 Mini-Project: OFT Fine-tuning for Text-to-SMILES Generation
 
-Parameter-efficient fine-tuning of a pretrained Qwen LLM for molecule generation using **Orthogonal Finetuning (OFT)**.
+This repository contains the code and processed data for the AIST5030 mini-project on **parameter-efficient fine-tuning**. The task is to fine-tune a pretrained Qwen language model with **Orthogonal Finetuning (OFT)** so that it generates a molecular **SMILES** string from a natural-language molecular description.
 
-Given a textual description of a molecule, the fine-tuned model generates the corresponding SMILES string.
+## Repository Contents
 
-## Project Structure
-
+```text
+.
+├── data/
+│   ├── train.jsonl
+│   └── test.jsonl
+├── prepare_data.py
+├── train.py
+├── evaluate.py
+├── run.sh
+├── requirements.txt
+└── results/
 ```
-├── prepare_data.py        # Expand raw JSON into (text, SMILES) train/test JSONL
-├── prepare_data_merged_text.py  # Merge all descriptions per molecule into one text
-├── train.py               # OFT fine-tuning with Hugging Face PEFT
-├── evaluate.py            # Inference + evaluation (Validity & Tanimoto Similarity)
-├── run.sh                 # Convenience script to run each step
-├── requirements.txt       # Python dependencies
-└── data/
-    ├── train.jsonl         # Training set
-    └── test.jsonl          # Test set
+
+## Data
+
+The repository only keeps the final processed files used for training and evaluation:
+
+- `data/train.jsonl`
+- `data/test.jsonl`
+
+The original raw dataset is not included because it is too large for the submission repository.
+
+`prepare_data.py` is retained to document the preprocessing pipeline. It can be used only if the original raw JSON file is available locally.
+
+Each line in the processed JSONL files has the format:
+
+```json
+{"text": "molecule description", "smiles": "target SMILES"}
 ```
 
-## Setup
+## Environment Setup
 
 ```bash
-conda create -n qwen35-oft python=3.10 -y
-conda activate qwen35-oft
+conda create -n aist5030-oft python=3.10 -y
+conda activate aist5030-oft
 python -m pip install -U pip setuptools wheel
-
-# Install GPU PyTorch wheel for CUDA 12.1
 pip install --index-url https://download.pytorch.org/whl/cu121 torch==2.5.1
-
-# Install project dependencies
 pip install -r requirements.txt
 ```
 
-
-Verify GPU runtime on a compute node:
-
-```bash
-python -c "import torch; print(torch.__version__, torch.version.cuda, torch.cuda.is_available())"
-```
-
-## Usage
-
-### 1. Prepare Data
-
-Expand the raw dataset into individual `(text_description, SMILES)` training samples:
+## Training
 
 ```bash
-python3 prepare_data.py
-```
-
-### 2. Train (OFT Fine-tuning)
-
-```bash
-python3 train.py \
+python train.py \
     --model_name Qwen/Qwen3.5-0.8B \
     --train_file data/train.jsonl \
     --output_dir output/qwen35-oft-smiles \
@@ -60,43 +55,49 @@ python3 train.py \
     --per_device_train_batch_size 8 \
     --gradient_accumulation_steps 4 \
     --learning_rate 1e-4 \
-    --bf16 --gradient_checkpointing
+    --bf16 \
+    --gradient_checkpointing
 ```
 
-### 3. Evaluate
+## Evaluation
+
+Evaluate the fine-tuned OFT model:
 
 ```bash
-# Fine-tuned model
-python3 evaluate.py \
+python evaluate.py \
     --model_name output/qwen35-oft-smiles \
     --base_model_name Qwen/Qwen3.5-0.8B \
     --test_file data/test.jsonl \
     --output_file results/oft_results.json
+```
 
-# Base model (zero-shot baseline)
-python3 evaluate.py \
+Evaluate the base model as a zero-shot baseline:
+
+```bash
+python evaluate.py \
     --model_name Qwen/Qwen3.5-0.8B \
     --test_file data/test.jsonl \
     --output_file results/base_results.json
 ```
 
-Or use the convenience script:
+## Convenience Script
 
 ```bash
-bash run.sh train       # Train
-bash run.sh eval_oft    # Evaluate fine-tuned model
-bash run.sh eval_base   # Evaluate base model
+bash run.sh train
+bash run.sh eval_oft
+bash run.sh eval_base
 ```
 
-## Method
+## Method Summary
 
-- **Model**: [Qwen3.5-0.8B](https://huggingface.co/Qwen/Qwen3.5-0.8B)
-- **PEFT**: Orthogonal Finetuning (OFT) via [Hugging Face PEFT](https://huggingface.co/docs/peft/main/en/conceptual_guides/oft), applied to all linear layers
-- **Task**: Text → SMILES molecule generation (instruction-tuned with chat template)
+- **Base model**: `Qwen/Qwen3.5-0.8B`
+- **PEFT method**: OFT from Hugging Face PEFT
+- **Task**: text-to-SMILES generation
+- **Evaluation metrics**:
+  - SMILES validity
+  - Tanimoto similarity
 
-## Evaluation Metrics
+## Notes
 
-| Metric | Description |
-|---|---|
-| **SMILES Validity** | Fraction of generated strings parseable by RDKit |
-| **Tanimoto Similarity** | Morgan fingerprint similarity between predicted and ground-truth molecules |
+- `prepare_data.py` is kept for completeness, but the submission-ready repository is designed to run directly from the processed JSONL files.
+- Example outputs and figures are stored in `results/`.
