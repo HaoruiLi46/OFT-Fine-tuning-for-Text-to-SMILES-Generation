@@ -1,4 +1,4 @@
-# AIST5030 Mini-Project: OFT Fine-tuning for Text-to-SMILES Generation
+# OFT Fine-tuning for Text-to-SMILES Generation
 
 This repository contains the code and processed data for the AIST5030 mini-project on **parameter-efficient fine-tuning**. The task is to fine-tune a pretrained Qwen language model with **Orthogonal Finetuning (OFT)** so that it generates a molecular **SMILES** string from a natural-language molecular description.
 
